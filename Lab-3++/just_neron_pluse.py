@@ -59,9 +59,28 @@ for i in range(n):
 
 print(weights)  # Вывод значений весов
 
-# проверка работы программы на обучающей выборке
+# Функция для определения, какая цифра изображена на входе
+def recognize_number(Sensor):
+    max_sum = -1  # Максимальная сумма
+    recognized_num = -1  # Распознанная цифра
+
+    for num in range(10):  # Перебираем все цифры от 0 до 9
+        s = 0  # Начальное значение суммы
+        for i in range(n_sensor):  # Суммируем взвешенные входы
+            s += int(Sensor[i]) * weights[num][i]
+        
+        if s > max_sum:  # Если текущая сумма больше максимальной
+            max_sum = s
+            recognized_num = num
+
+    return recognized_num  # Возвращаем распознанную цифру
+
+# Проверка работы программы на обучающей выборке
+print("+++++++++++++")
+print("Проверка на обучающей выборке:")
 for i in range(10):
-    print(f"{i} это {i}? ", perceptron(nums[i], i))
+    recognized = recognize_number(nums[i])
+    print(f"На входе {i}, распознано: {recognized}")
 
 # Тестовая выборка (различные варианты изображения цифры 5)
 num51 = list('111100111000111')
@@ -71,11 +90,19 @@ num54 = list('110100111001111')
 num55 = list('110100111001011')
 num56 = list('111100101001111')
 
+# Тестовая выборка для других цифр (примеры)
+num01 = list('111101101100111')  # Немного измененный 0
+num12 = list('001001001000001')  # Немного измененный 1
+num23 = list('111000111100111')  # Немного измененный 2
+
 print("+++++++++++++")
-# Прогон по тестовой выборке
-print("Узнал 5 в 51? ", perceptron(num51, 5))
-print("Узнал 5 в 52? ", perceptron(num52, 5))
-print("Узнал 5 в 53? ", perceptron(num53, 5))
-print("Узнал 5 в 54? ", perceptron(num54, 5))
-print("Узнал 5 в 55? ", perceptron(num55, 5))
-print("Узнал 5 в 56? ", perceptron(num56, 5))
+print("Проверка на тестовой выборке:")
+print("Узнал 5 в 51? ", recognize_number(num51))
+print("Узнал 5 в 52? ", recognize_number(num52))
+print("Узнал 5 в 53? ", recognize_number(num53))
+print("Узнал 5 в 54? ", recognize_number(num54))
+print("Узнал 5 в 55? ", recognize_number(num55))
+print("Узнал 5 в 56? ", recognize_number(num56))
+print("Узнал 0 в 01? ", recognize_number(num01))
+print("Узнал 1 в 12? ", recognize_number(num12))
+print("Узнал 2 в 23? ", recognize_number(num23))
