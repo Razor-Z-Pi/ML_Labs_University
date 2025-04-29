@@ -15,7 +15,6 @@ EPSILON = 1.0  # Начальная вероятность случайного 
 EPSILON_MIN = 0.01  # Минимальная вероятность случайного хода
 EPSILON_DECAY = 0.995  # Скорость уменьшения epsilon
 
-# Создаем модель нейронной сети
 def create_model():
     model = tf.keras.Sequential([
         tf.keras.layers.Dense(64, activation='relu', input_shape=(9,)),
@@ -33,12 +32,6 @@ class DQNAgent:
         self.target_model = create_model()
         self.memory = deque(maxlen=MEMORY_SIZE)
         self.epsilon = EPSILON
-        
-        # Загружаем модель, если она существует
-        if os.path.exists('tic_tac_toe_model.h5'):
-            self.model.load_weights('tic_tac_toe_model.h5')
-            self.target_model.load_weights('tic_tac_toe_model.h5')
-            self.epsilon = EPSILON_MIN
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -46,10 +39,10 @@ class DQNAgent:
     def act(self, state, available_moves):
         if np.random.rand() <= self.epsilon:
             return random.choice(available_moves)
-        
+
         state = np.reshape(state, [1, 9])
         act_values = self.model.predict(state, verbose=0)
-        
+
         # Фильтруем только доступные ходы
         available_actions = act_values[0][available_moves]
         return available_moves[np.argmax(available_actions)]
@@ -57,9 +50,9 @@ class DQNAgent:
     def replay(self):
         if len(self.memory) < BATCH_SIZE:
             return
-        
+
         minibatch = random.sample(self.memory, BATCH_SIZE)
-        
+
         states = np.array([x[0] for x in minibatch])
         actions = np.array([x[1] for x in minibatch])
         rewards = np.array([x[2] for x in minibatch])
@@ -68,25 +61,20 @@ class DQNAgent:
 
         targets = self.model.predict(states, verbose=0)
         next_q_values = self.target_model.predict(next_states, verbose=0)
-        
+
         for i in range(BATCH_SIZE):
             if dones[i]:
                 targets[i][actions[i]] = rewards[i]
             else:
                 targets[i][actions[i]] = rewards[i] + GAMMA * np.amax(next_q_values[i])
-        
+
         self.model.fit(states, targets, epochs=1, verbose=0)
-        
+
         if self.epsilon > EPSILON_MIN:
             self.epsilon *= EPSILON_DECAY
 
     def update_target_model(self):
         self.target_model.set_weights(self.model.get_weights())
-        
-    def save_model(self):
-        self.model.save_weights('tic_tac_toe_model.h5')
-
-# Инициализация агента
 agent = DQNAgent()
 
 # Функции игры
@@ -121,18 +109,18 @@ def play_game(train_mode=True):
     board = [str(i+1) for i in range(9)]
     done = False
     winner = None
-    
+
     # Определяем, кто ходит первым (случайно)
     player_turn = random.choice(['X', 'O'])
-    
+
     while not done:
         state = get_state(board)
         available_moves = get_available_moves(board)
-        
+
         if not available_moves:
             done = True
             break
-            
+
         if player_turn == 'X':
             # Ход человека
             draw_board(board)
@@ -151,17 +139,17 @@ def play_game(train_mode=True):
             # Ход ИИ
             move = agent.act(state, available_moves)
             print(f"ИИ выбирает позицию {move + 1}")
-        
+
         # Делаем ход
         board[move] = player_turn
-        
+
         # Проверяем победу
         winner = check_win(board)
         if winner:
             done = True
             draw_board(board)
             print(f"{winner} победил!")
-            
+
             if train_mode and player_turn == 'O':
                 # ИИ выиграл
                 reward = 1
@@ -175,7 +163,7 @@ def play_game(train_mode=True):
             done = True
             draw_board(board)
             print("Ничья!")
-            
+
             if train_mode:
                 reward = 0.1
                 agent.remember(state, move, reward, get_state(board), done)
@@ -183,10 +171,10 @@ def play_game(train_mode=True):
             # Промежуточный ход ИИ
             reward = 0
             agent.remember(state, move, reward, get_state(board), done)
-        
+
         # Меняем игрока
         player_turn = 'O' if player_turn == 'X' else 'X'
-    
+
     if train_mode:
         agent.replay()
         agent.update_target_model()
@@ -197,7 +185,6 @@ for e in range(EPISODES):
     play_game(train_mode=True)
     if e % 100 == 0:
         print(f"Эпизод: {e}, Epsilon: {agent.epsilon:.2f}")
-        agent.save_model()
 
 # Игра с обученным ИИ
 print("\nОбучение завершено! Давайте сыграем!")
@@ -207,6 +194,3 @@ while True:
     again = input("Хотите сыграть еще? (y/n): ")
     if again.lower() != 'y':
         break
-
-agent.save_model()
-print("Модель сохранена в 'tic_tac_toe_model.h5'")
