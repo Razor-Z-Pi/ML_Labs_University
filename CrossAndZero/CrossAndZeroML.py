@@ -2,7 +2,6 @@ import numpy as np
 import random
 import tensorflow as tf
 from collections import deque
-import os
 
 print("*" * 10, " Крестики-нолики с ИИ на TensorFlow ", "*" * 10)
 
@@ -13,7 +12,7 @@ BATCH_SIZE = 32  # Размер батча для обучения
 GAMMA = 0.95  # Коэффициент дисконтирования
 EPSILON = 1.0  # Начальная вероятность случайного хода
 EPSILON_MIN = 0.01  # Минимальная вероятность случайного хода
-EPSILON_DECAY = 0.995  # Скорость уменьшения epsilon
+EPSILON_DECAY = 0.995  # Скорость уменьшения элипсон
 
 def create_model():
     model = tf.keras.Sequential([
@@ -21,8 +20,8 @@ def create_model():
         tf.keras.layers.Dense(64, activation='relu'),
         tf.keras.layers.Dense(9, activation='linear')
     ])
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-                  loss='mse')
+    model.compile(optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001),
+                  loss = 'mse')
     return model
 
 # Класс для агента DQN
@@ -30,22 +29,22 @@ class DQNAgent:
     def __init__(self):
         self.model = create_model()
         self.target_model = create_model()
-        self.memory = deque(maxlen=MEMORY_SIZE)
+        self.memory = deque(maxlen = MEMORY_SIZE)
         self.epsilon = EPSILON
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
-    def act(self, state, available_moves):
+    def act(self, state, av_moves):
         if np.random.rand() <= self.epsilon:
-            return random.choice(available_moves)
+            return random.choice(av_moves)
 
         state = np.reshape(state, [1, 9])
-        act_values = self.model.predict(state, verbose=0)
+        act_values = self.model.predict(state, verbose = 0)
 
-        # Фильтруем только доступные ходы
-        available_actions = act_values[0][available_moves]
-        return available_moves[np.argmax(available_actions)]
+        # Фильтруем только доступ2ные ходы
+        access_move = act_values[0][av_moves]
+        return av_moves[np.argmax(access_move)]
 
     def replay(self):
         if len(self.memory) < BATCH_SIZE:
@@ -59,8 +58,8 @@ class DQNAgent:
         next_states = np.array([x[3] for x in minibatch])
         dones = np.array([x[4] for x in minibatch])
 
-        targets = self.model.predict(states, verbose=0)
-        next_q_values = self.target_model.predict(next_states, verbose=0)
+        targets = self.model.predict(states, verbose = 0)
+        next_q_values = self.target_model.predict(next_states, verbose = 0)
 
         for i in range(BATCH_SIZE):
             if dones[i]:
@@ -68,13 +67,14 @@ class DQNAgent:
             else:
                 targets[i][actions[i]] = rewards[i] + GAMMA * np.amax(next_q_values[i])
 
-        self.model.fit(states, targets, epochs=1, verbose=0)
+        self.model.fit(states, targets, epochs = 1, verbose = 0)
 
         if self.epsilon > EPSILON_MIN:
             self.epsilon *= EPSILON_DECAY
 
     def update_target_model(self):
         self.target_model.set_weights(self.model.get_weights())
+
 agent = DQNAgent()
 
 # Функции игры
@@ -106,7 +106,7 @@ def check_win(board):
     return None
 
 def play_game(train_mode=True):
-    board = [str(i+1) for i in range(9)]
+    board = [str(i + 1) for i in range(9)]
     done = False
     winner = None
 
@@ -132,9 +132,9 @@ def play_game(train_mode=True):
                     if move in available_moves:
                         valid = True
                     else:
-                        print("Недопустимый ход!")
+                        print("Недопустимый ход!!!")
                 except:
-                    print("Введите число от 1 до 9!")
+                    print("Введите число от 1 до 9!!!")
         else:
             # Ход ИИ
             move = agent.act(state, available_moves)
